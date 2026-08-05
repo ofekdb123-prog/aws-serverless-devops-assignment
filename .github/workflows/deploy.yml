@@ -1,0 +1,47 @@
+name: Deploy CDK Stack to AWS
+
+on:
+  push:
+    branches:
+      - main # Triggers on push to the main branch
+  workflow_dispatch: # Enables manual execution from the GitHub Actions tab
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js environment with npm caching
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Install project dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Run CDK unit tests (Jest)
+      - name: Run CDK Tests
+        run: npm test
+
+      # 5. Synthesize CloudFormation template
+      - name: CDK Synth
+        run: npx cdk synth
+
+      # 6. Authenticate with AWS using repository secrets
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # 7. Deploy infrastructure stack to AWS
+      - name: Deploy CDK Stack
+        run: npx cdk deploy --require-approval never

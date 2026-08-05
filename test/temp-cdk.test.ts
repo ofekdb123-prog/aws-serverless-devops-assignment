@@ -1,17 +1,24 @@
-// import * as cdk from 'aws-cdk-lib/core';
-// import { Template } from 'aws-cdk-lib/assertions';
-// import * as TempCdk from '../lib/temp-cdk-stack';
+import * as cdk from 'aws-cdk-lib';
+import { Template } from 'aws-cdk-lib/assertions';
+import { AwsServerlessDevopsAssignmentStack } from '../lib/aws-serverless-devops-assignment-stack';
 
-// example test. To run these tests, uncomment this file along with the
-// example resource in lib/temp-cdk-stack.ts
-test('SQS Queue Created', () => {
-//   const app = new cdk.App();
-//     // WHEN
-//   const stack = new TempCdk.TempCdkStack(app, 'MyTestStack');
-//     // THEN
-//   const template = Template.fromStack(stack);
+test('Stack creates required AWS resources', () => {
+  const app = new cdk.App();
 
-//   template.hasResourceProperties('AWS::SQS::Queue', {
-//     VisibilityTimeout: 300
-//   });
+  // WHEN: Synthesize the CDK stack into a CloudFormation template for testing
+  const stack = new AwsServerlessDevopsAssignmentStack(app, 'MyTestStack');
+
+  // THEN: Extract the CloudFormation template assertions helper
+  const template = Template.fromStack(stack);
+
+  // 1. Verify that exactly one S3 Bucket is created
+  template.resourceCountIs('AWS::S3::Bucket', 1);
+
+  // 2. Verify that exactly one SNS Topic is created
+  template.resourceCountIs('AWS::SNS::Topic', 1);
+
+  // 3. Verify that the Lambda Function exists and uses the Python 3.12 runtime
+  template.hasResourceProperties('AWS::Lambda::Function', {
+    Runtime: 'python3.12',
+  });
 });
