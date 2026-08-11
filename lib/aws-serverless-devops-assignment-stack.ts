@@ -1,4 +1,5 @@
   import * as cdk from 'aws-cdk-lib';
+  import * as iam from 'aws-cdk-lib/aws-iam';
   import { Construct } from 'constructs';
   import * as s3 from 'aws-cdk-lib/aws-s3';
   import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
@@ -45,7 +46,11 @@
       });
 
       // 5. Least Privilege Permissions (IAM)
-      bucket.grantRead(listS3Lambda);
+      listS3Lambda.addToRolePolicy(new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['s3:ListBucket'],
+        resources: [bucket.bucketArn],
+      }));
       topic.grantPublish(listS3Lambda);
     }
   }
